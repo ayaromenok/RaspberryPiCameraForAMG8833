@@ -9,6 +9,8 @@
 class QLayout;
 class QGroupBox;
 class QLabel;
+class QImage;
+class QLabel;
 
 class Widget : public QWidget
 {
@@ -23,9 +25,15 @@ public:
 private:
 
     QLayout     *loutMain_;
-    QGroupBox   *gbAGM8833_;
-    QGroupBox   *gbRPiCam_;
+    QGroupBox   *gbIR_;
+    QGroupBox   *gbCam_;
     QGroupBox   *gbControl_;
+
+    QImage      *imgIR_;
+    QImage      *imgCam_;
+
+    QLabel      *lbIR_;
+    QLabel      *lbCam_;
 };
 
 #endif // WIDGET_H
