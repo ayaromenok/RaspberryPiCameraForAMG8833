@@ -29,17 +29,17 @@ Widget::setUI(quint32 type)
         loutMain_ = new QVBoxLayout;
     }
 
-    imgIR_ = new QImage(":/res/test/min20max50.jpg");
+    imgIR_ = new QImage(":/res/test/testHotCupColdMeet.jpg");
     lbIR_ = new QLabel("IR image");
-    lbIR_->setPixmap(QPixmap::fromImage(*imgIR_).scaled(256, 256));
+    lbIR_->setPixmap(QPixmap::fromImage(*imgIR_).scaled(240, 240));
     QVBoxLayout *loutIR = new QVBoxLayout;
     loutIR->addWidget(lbIR_);
     gbIR_ = new QGroupBox("IR/AGM 8833");
     gbIR_->setLayout(loutIR);
 
-    imgCam_ = new QImage(":/res/test/candle.jpg");
+    imgCam_ = new QImage(":/res/test/testHotCupColdMeetCamFOV160_640x480.jpg");
     lbCam_ = new QLabel("Cam image");
-    lbCam_->setPixmap(QPixmap::fromImage(*imgCam_).scaled(256, 256));
+    lbCam_->setPixmap(QPixmap::fromImage(*imgCam_).scaled(320, 240));
     QVBoxLayout *loutCam = new QVBoxLayout;
     loutCam->addWidget(lbCam_);
     gbCam_  = new QGroupBox("Cam");
