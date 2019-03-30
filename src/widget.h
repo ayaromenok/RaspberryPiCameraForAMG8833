@@ -6,11 +6,20 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QVideoFrame>
+
 class QLayout;
+class QHBoxLayout;
+class QVBoxLayout;
 class QGroupBox;
 class QLabel;
 class QImage;
 class QLabel;
+
+class QTimer;
+class QCamera;
+class QCameraImageCapture;
+class QCameraViewfinder;
 
 class Widget : public QWidget
 {
@@ -22,18 +31,32 @@ public:
 
     void setUI(quint32 type = 0);
 
-private:
+private slots:
+    void        timerUpdate();
+    bool        imgToBuffer(int id, const QVideoFrame &buffer);
 
+private:
+    void setCam();
+    void setIR();
     QLayout     *loutMain_;
     QGroupBox   *gbIR_;
     QGroupBox   *gbCam_;
-    QGroupBox   *gbControl_;
+    QGroupBox   *gbCtrl_;
 
     QImage      *imgIR_;
     QImage      *imgCam_;
 
     QLabel      *lbIR_;
     QLabel      *lbCam_;
+
+    QVBoxLayout *loutIR_;
+    QVBoxLayout *loutCam_;
+    QVBoxLayout *loutCtrl_;
+
+    QTimer      *timer_;
+    QCamera                 *cam_;
+    QCameraImageCapture     *imgCap_;
+    QCameraViewfinder       *camViewFinder_;
 };
 
 #endif // WIDGET_H

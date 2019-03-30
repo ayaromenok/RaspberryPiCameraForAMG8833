@@ -3,6 +3,7 @@
 # https://github.com/ayaromenok/RaspberryPiCameraForAMG8833/blob/master/LICENSE
 
 QT       += core gui widgets
+QT       += multimedia multimediawidgets
 
 TARGET = RPiCam4AGM8833
 TEMPLATE = app
