@@ -6,6 +6,9 @@ QT       += core gui widgets
 QT       += multimedia multimediawidgets
 
 TARGET = RPiCam4AGM8833
+
+DEFINES += CAMERA_CAPTURE_VIA_FILE
+
 TEMPLATE = app
 
 CONFIG += c++11

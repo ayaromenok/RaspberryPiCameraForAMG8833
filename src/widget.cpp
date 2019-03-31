@@ -69,7 +69,11 @@ Widget::timerUpdate()
 {
     qDebug() << __PRETTY_FUNCTION__;
     cam_->searchAndLock();
+#ifdef CAMERA_CAPTURE_VIA_FILE
+    imgCap_->capture("./imgCam.jpg");
+#else //CAMERA_CAPTURE_VIA_FILE
     imgCap_->capture();
+#endif //CAMERA_CAPTURE_VIA_FILE
     cam_->unlock();
 }
 
@@ -88,9 +92,19 @@ Widget::setCam()
     cam_->setCaptureMode(QCamera::CaptureStillImage);
 
     imgCap_ = new QCameraImageCapture(cam_);
+
+#ifdef CAMERA_CAPTURE_VIA_FILE
+    //workaround for RPi\OSX\iOS\some Windows builds
+    imgCap_->setCaptureDestination(QCameraImageCapture::CaptureToFile);
+    connect(imgCap_, SIGNAL(imageSaved(int, const QString&)),
+        this, SLOT(imgToFile(int, const QString&)));
+    qDebug() << "Capture via File (workaround mode)";
+#else //CAMERA_CAPTURE_VIA_FILE
     imgCap_->setCaptureDestination(QCameraImageCapture::CaptureToBuffer);
     connect(imgCap_, &QCameraImageCapture::imageAvailable,
             this, &Widget::imgToBuffer);
+    qDebug() << "Capture via Buffer (preferable mode)";
+#endif //CAMERA_CAPTURE_VIA_FILE
     camViewFinder_->show();
     cam_->setViewfinder(camViewFinder_);
     cam_->start();
@@ -115,5 +129,21 @@ Widget::imgToBuffer(int id, const QVideoFrame &buffer)
     qDebug() << "\t\tinput image format" << imgIn.format()
              << "// 4 - Image::Format_RGB32" << "id" <<id;
     lbCam_->setPixmap(QPixmap::fromImage(imgIn));
+    if (imgIn.width() > 0)
+        result = true;
+    return result;
+}
+
+bool
+Widget::imgToFile(int id, const QString &fName)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    bool result = false;
+    QImage imgIn(fName);
+    qDebug() << "\t\tinput image format" << imgIn.format()
+             << "// 4 - Image::Format_RGB32" << "id" << id;
+    lbCam_->setPixmap(QPixmap::fromImage(imgIn.scaledToWidth(360)));
+    if (imgIn.width() > 0)
+        result = true;
     return result;
 }

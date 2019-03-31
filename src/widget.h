@@ -34,6 +34,8 @@ public:
 private slots:
     void        timerUpdate();
     bool        imgToBuffer(int id, const QVideoFrame &buffer);
+    // workaround for https://github.com/ayaromenok/RaspberryPiCameraForAMG8833/issues/4
+    bool        imgToFile(int id, const QString &fName);
 
 private:
     void setCam();
