@@ -8,6 +8,10 @@
 #include <QtMultimediaWidgets>
 #include <QDebug>
 
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
@@ -68,6 +72,7 @@ void
 Widget::timerUpdate()
 {
     qDebug() << __PRETTY_FUNCTION__;
+
     cam_->searchAndLock();
 #ifdef CAMERA_CAPTURE_VIA_FILE
     imgCap_->capture("./imgCam.jpg");
@@ -75,6 +80,8 @@ Widget::timerUpdate()
     imgCap_->capture();
 #endif //CAMERA_CAPTURE_VIA_FILE
     cam_->unlock();
+
+    cvIRUpdate();
 }
 
 void
@@ -90,6 +97,7 @@ Widget::setCam()
     }
     cam_ = new QCamera(QCameraInfo::defaultCamera());
     cam_->setCaptureMode(QCamera::CaptureStillImage);
+    cam_->setViewfinder(camViewFinder_);
 
     imgCap_ = new QCameraImageCapture(cam_);
 
@@ -106,7 +114,7 @@ Widget::setCam()
     qDebug() << "Capture via Buffer (preferable mode)";
 #endif //CAMERA_CAPTURE_VIA_FILE
     camViewFinder_->show();
-    cam_->setViewfinder(camViewFinder_);
+
     cam_->start();
 }
 
@@ -126,8 +134,8 @@ Widget::imgToBuffer(int id, const QVideoFrame &buffer)
     frame.map(QAbstractVideoBuffer::ReadOnly);
     int nbytes = frame.mappedBytes();
     QImage imgIn = QImage::fromData(frame.bits(), nbytes).scaledToWidth(360);
-    qDebug() << "\t\tinput image format" << imgIn.format()
-             << "// 4 - Image::Format_RGB32" << "id" <<id;
+//    qDebug() << "\t\tinput image format" << imgIn.format()
+//             << "// 4 - Image::Format_RGB32" << "id" <<id;
     lbCam_->setPixmap(QPixmap::fromImage(imgIn));
     if (imgIn.width() > 0)
         result = true;
@@ -140,10 +148,37 @@ Widget::imgToFile(int id, const QString &fName)
     qDebug() << __PRETTY_FUNCTION__;
     bool result = false;
     QImage imgIn(fName);
-    qDebug() << "\t\tinput image format" << imgIn.format()
-             << "// 4 - Image::Format_RGB32" << "id" << id;
-    lbCam_->setPixmap(QPixmap::fromImage(imgIn.scaledToWidth(360)));
+    QImage img(imgIn.scaled(320,240));
+    qDebug() << "\t\tinput image format" << img.format()
+             << "// 4 - Image::Format_RGB32" << "id" << id
+             << "size" << img.width() << img.height();
+    if (!imgIn.isNull())
+        cvCamUpdate(img);
+
     if (imgIn.width() > 0)
         result = true;
     return result;
+}
+
+void
+Widget::cvCamUpdate(QImage &image){
+    qDebug() << __PRETTY_FUNCTION__;
+
+    cv::Mat imgIn(cv::Size(image.width(),image.height()),
+                  CV_8UC4, image.bits());
+    cv:: Mat gray,grayRes, imgRes;
+
+    cv:Canny(imgIn, imgRes, 50, 100, 3);
+    //cv::imshow("res", imgRes);
+    QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
+    cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
+                       CV_8UC3, imageOut.bits());
+    cv::cvtColor(imgRes, imageCvOut, cv::COLOR_BGR2RGB);
+
+    lbCam_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(360)));
+}
+
+void
+Widget::cvIRUpdate(){
+    qDebug() << __PRETTY_FUNCTION__;
 }
