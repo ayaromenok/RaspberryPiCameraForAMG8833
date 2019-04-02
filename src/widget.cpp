@@ -216,13 +216,21 @@ void
 Widget::cvCamUpdate(cv::Mat &imgIn)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    cv::Mat imgRes;
+    cv::Mat imgTmp, imgTmp0, imgRes;
 
-    cv::Canny(imgIn, imgRes, 50, 100, 3);
-    //cv::imshow("res", imgRes);
+    //\todo add to settings - required flip for rpi cam v1.3/wide angle
+    cv::cvtColor(imgIn, imgTmp0, cv::COLOR_RGB2GRAY);
+    cv::flip(imgTmp0, imgTmp, -1); //flip by both axis
+
+    cv::Canny(imgTmp, imgRes, 50, 100, 3);
+
+    imgRes += imgTmp;
+
     QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
     cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
                        CV_8UC3, imageOut.bits());
+
+
     cv::cvtColor(imgRes, imageCvOut, cv::COLOR_BGR2RGB);
 
     lbCam_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
