@@ -25,7 +25,8 @@ Widget::Widget(QWidget *parent)
     setIR();
     timer_ = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(timerUpdate()));
-    timer_->start(1000); //msec. min is 125 - 8fps - maximum for AGM8833
+    timer_->start(66); //msec. min is 125 - 8fps - maximum for AGM8833
+    //PC - 66 - 15fps minimum for ThinkPad
 }
 
 Widget::~Widget()
@@ -141,6 +142,8 @@ Widget::setCamCV()
     cvCap.open(0); // cv::CAP_V4L);
     cvCap.set(cv::CAP_PROP_FRAME_WIDTH, 320);
     cvCap.set(cv::CAP_PROP_FRAME_HEIGHT, 240);
+    cvCap.set(cv::CAP_PROP_FPS, 15);
+
     if (!cvCap.isOpened()){
         qErrnoWarning("CV camera capture error");
     } else {
