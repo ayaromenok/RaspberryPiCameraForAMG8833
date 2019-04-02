@@ -8,6 +8,7 @@ QT       += multimedia multimediawidgets
 TARGET = RPiCam4AGM8833
 
 DEFINES += CAMERA_CAPTURE_VIA_FILE
+DEFINES += CAMERA_CAPTURE_CV
 
 TEMPLATE = app
 
@@ -34,5 +35,5 @@ linux:!android {
     INCLUDEPATH += $${CVLINUX}/include/opencv4
     LIBS += -L$${CVLINUX}/lib
     LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
-    LIBS += -lopencv_highgui
+    LIBS += -lopencv_highgui -lopencv_videoio
 }
