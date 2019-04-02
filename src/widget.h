@@ -9,6 +9,9 @@
 #include <QVideoFrame>
 #include <QImage>
 
+#include <opencv2/core.hpp>
+#include <opencv2/videoio.hpp>
+
 class QLayout;
 class QHBoxLayout;
 class QVBoxLayout;
@@ -16,11 +19,17 @@ class QGroupBox;
 class QLabel;
 class QImage;
 class QLabel;
+class QPushButton;
 
 class QTimer;
 class QCamera;
 class QCameraImageCapture;
 class QCameraViewfinder;
+
+namespace cv{
+    class VideoCapture;
+    class Mat;
+}
 
 class Widget : public QWidget
 {
@@ -37,11 +46,14 @@ private slots:
     bool        imgToBuffer(int id, const QVideoFrame &buffer);
     // workaround for https://github.com/ayaromenok/RaspberryPiCameraForAMG8833/issues/4
     bool        imgToFile(int id, const QString &fName);
-    void        cvCamUpdate(QImage &image);
+    void        camUpdate(QImage &image);
+    void        cvCamUpdate(cv::Mat &imgIn);
     void        cvIRUpdate();
+    void        quit();
 
 private:
     void setCam();
+    void setCamCV();
     void setIR();
     QLayout     *loutMain_;
     QGroupBox   *gbIR_;
@@ -53,6 +65,7 @@ private:
 
     QLabel      *lbIR_;
     QLabel      *lbCam_;
+    QPushButton *pbCtrlExit_;
 
     QVBoxLayout *loutIR_;
     QVBoxLayout *loutCam_;
@@ -62,6 +75,9 @@ private:
     QCamera                 *cam_;
     QCameraImageCapture     *imgCap_;
     QCameraViewfinder       *camViewFinder_;
+
+    cv::VideoCapture        cvCap;
+    cv::Mat                 frame;
 };
 
 #endif // WIDGET_H

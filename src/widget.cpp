@@ -8,7 +8,6 @@
 #include <QtMultimediaWidgets>
 #include <QDebug>
 
-#include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -18,11 +17,16 @@ Widget::Widget(QWidget *parent)
     qDebug() << __PRETTY_FUNCTION__;
     setGeometry (100, 100, 854, 480);
     setUI(0);
+#ifdef CAMERA_CAPTURE_CV
+    setCamCV();
+#else //CAMERA_CAPTURE_CV
     setCam();
+#endif //CAMERA_CAPTURE_CV
     setIR();
     timer_ = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(timerUpdate()));
-    timer_->start(1000); //msec. min is 125 - 8fps - maximum for AGM8833
+    timer_->start(66); //msec. min is 125 - 8fps - maximum for AGM8833
+    //PC - 66 - 15fps minimum for ThinkPad
 }
 
 Widget::~Widget()
@@ -58,6 +62,9 @@ Widget::setUI(quint32 type)
     gbCam_->setLayout(loutCam_);
 
     loutCtrl_ = new QVBoxLayout;
+    pbCtrlExit_ = new QPushButton("E&xit", this);
+    connect(pbCtrlExit_, SIGNAL(clicked()), this, SLOT(quit()));
+    loutCtrl_->addWidget(pbCtrlExit_);
     gbCtrl_ = new QGroupBox("Control");
     gbCtrl_->setLayout(loutCtrl_);
 
@@ -73,13 +80,23 @@ Widget::timerUpdate()
 {
     qDebug() << __PRETTY_FUNCTION__;
 
+#ifdef CAMERA_CAPTURE_CV
+    //OpenCV capture here
+    cvCap >> frame;
+    if (0 == frame.cols){
+        qErrnoWarning("CV Camera FRAME capture error");
+    } else {
+        cvCamUpdate(frame);
+    }
+#else //CAMERA_CAPTURE_CV
     cam_->searchAndLock();
-#ifdef CAMERA_CAPTURE_VIA_FILE
-    imgCap_->capture("./imgCam.jpg");
-#else //CAMERA_CAPTURE_VIA_FILE
-    imgCap_->capture();
-#endif //CAMERA_CAPTURE_VIA_FILE
+    #ifdef CAMERA_CAPTURE_VIA_FILE
+        imgCap_->capture("./imgCam.jpg");
+    #else //CAMERA_CAPTURE_VIA_FILE
+        imgCap_->capture();
+    #endif //CAMERA_CAPTURE_VIA_FILE
     cam_->unlock();
+#endif //CAMERA_CAPTURE_CV
 
     cvIRUpdate();
 }
@@ -119,6 +136,23 @@ Widget::setCam()
 }
 
 void
+Widget::setCamCV()
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    cvCap.open(0); // cv::CAP_V4L);
+    cvCap.set(cv::CAP_PROP_FRAME_WIDTH, 320);
+    cvCap.set(cv::CAP_PROP_FRAME_HEIGHT, 240);
+    cvCap.set(cv::CAP_PROP_FPS, 15);
+
+    if (!cvCap.isOpened()){
+        qErrnoWarning("CV camera capture error");
+    } else {
+        frame = cv::Mat(320,240, CV_8UC3);
+    }
+}
+
+
+void
 Widget::setIR()
 {
     qDebug() << __PRETTY_FUNCTION__;
@@ -153,7 +187,7 @@ Widget::imgToFile(int id, const QString &fName)
              << "// 4 - Image::Format_RGB32" << "id" << id
              << "size" << img.width() << img.height();
     if (!imgIn.isNull())
-        cvCamUpdate(img);
+        camUpdate(img);
 
     if (imgIn.width() > 0)
         result = true;
@@ -161,24 +195,49 @@ Widget::imgToFile(int id, const QString &fName)
 }
 
 void
-Widget::cvCamUpdate(QImage &image){
+Widget::camUpdate(QImage &image){
     qDebug() << __PRETTY_FUNCTION__;
 
     cv::Mat imgIn(cv::Size(image.width(),image.height()),
                   CV_8UC4, image.bits());
     cv:: Mat gray,grayRes, imgRes;
 
-    cv:Canny(imgIn, imgRes, 50, 100, 3);
+    cv::Canny(imgIn, imgRes, 50, 100, 3);
     //cv::imshow("res", imgRes);
     QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
     cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
                        CV_8UC3, imageOut.bits());
     cv::cvtColor(imgRes, imageCvOut, cv::COLOR_BGR2RGB);
 
-    lbCam_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(360)));
+    lbCam_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
 }
 
 void
-Widget::cvIRUpdate(){
+Widget::cvCamUpdate(cv::Mat &imgIn)
+{
     qDebug() << __PRETTY_FUNCTION__;
+    cv::Mat imgRes;
+
+    cv::Canny(imgIn, imgRes, 50, 100, 3);
+    //cv::imshow("res", imgRes);
+    QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
+    cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
+                       CV_8UC3, imageOut.bits());
+    cv::cvtColor(imgRes, imageCvOut, cv::COLOR_BGR2RGB);
+
+    lbCam_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
+}
+
+
+void
+Widget::cvIRUpdate()
+{
+    qDebug() << __PRETTY_FUNCTION__;
+}
+
+void
+Widget::quit()
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    QApplication::quit();
 }
