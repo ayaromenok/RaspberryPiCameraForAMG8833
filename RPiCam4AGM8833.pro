@@ -27,3 +27,12 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     res.qrc
+
+CVLINUX = /usr/local
+linux:!android {
+    message("* OpenCV settings for Unix/Linux.")
+    INCLUDEPATH += $${CVLINUX}/include/opencv4
+    LIBS += -L$${CVLINUX}/lib
+    LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
+    LIBS += -lopencv_highgui
+}

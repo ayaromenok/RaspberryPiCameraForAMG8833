@@ -7,6 +7,7 @@
 
 #include <QWidget>
 #include <QVideoFrame>
+#include <QImage>
 
 class QLayout;
 class QHBoxLayout;
@@ -36,6 +37,8 @@ private slots:
     bool        imgToBuffer(int id, const QVideoFrame &buffer);
     // workaround for https://github.com/ayaromenok/RaspberryPiCameraForAMG8833/issues/4
     bool        imgToFile(int id, const QString &fName);
+    void        cvCamUpdate(QImage &image);
+    void        cvIRUpdate();
 
 private:
     void setCam();
