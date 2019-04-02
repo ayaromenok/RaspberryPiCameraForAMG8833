@@ -61,6 +61,9 @@ Widget::setUI(quint32 type)
     gbCam_->setLayout(loutCam_);
 
     loutCtrl_ = new QVBoxLayout;
+    pbCtrlExit_ = new QPushButton("E&xit", this);
+    connect(pbCtrlExit_, SIGNAL(clicked()), this, SLOT(quit()));
+    loutCtrl_->addWidget(pbCtrlExit_);
     gbCtrl_ = new QGroupBox("Control");
     gbCtrl_->setLayout(loutCtrl_);
 
@@ -227,4 +230,11 @@ void
 Widget::cvIRUpdate()
 {
     qDebug() << __PRETTY_FUNCTION__;
+}
+
+void
+Widget::quit()
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    QApplication::quit();
 }

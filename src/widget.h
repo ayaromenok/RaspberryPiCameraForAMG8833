@@ -19,6 +19,7 @@ class QGroupBox;
 class QLabel;
 class QImage;
 class QLabel;
+class QPushButton;
 
 class QTimer;
 class QCamera;
@@ -48,6 +49,7 @@ private slots:
     void        camUpdate(QImage &image);
     void        cvCamUpdate(cv::Mat &imgIn);
     void        cvIRUpdate();
+    void        quit();
 
 private:
     void setCam();
@@ -63,6 +65,7 @@ private:
 
     QLabel      *lbIR_;
     QLabel      *lbCam_;
+    QPushButton *pbCtrlExit_;
 
     QVBoxLayout *loutIR_;
     QVBoxLayout *loutCam_;
