@@ -254,8 +254,8 @@ Widget::cvIRUpdate()
     cv::Mat imageCvOut(cv::Size(imgIn.cols,imgIn.rows),
                        CV_8UC3, imageOut.bits());
 
-    cv::rotate(imgIn, imgTmp,cv::ROTATE_90_COUNTERCLOCKWISE);
-    cv::cvtColor(imgTmp, imageCvOut, cv::COLOR_BGR2RGB);
+    cv::rotate(imgIn, imgTmp, cv::ROTATE_180);
+    cv::cvtColor(imgTmp, imageCvOut, cv::COLOR_GRAY2RGB);
 
     lbIR_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
     qDebug() << data;
