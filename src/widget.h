@@ -8,9 +8,12 @@
 #include <QWidget>
 #include <QVideoFrame>
 #include <QImage>
+#include <QVector>
 
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
+
+class QAmg8833;
 
 class QLayout;
 class QHBoxLayout;
@@ -78,6 +81,8 @@ private:
 
     cv::VideoCapture        cvCap;
     cv::Mat                 frame;
+    QAmg8833                *ir_;
+    QVector<quint8>         data;
 };
 
 #endif // WIDGET_H

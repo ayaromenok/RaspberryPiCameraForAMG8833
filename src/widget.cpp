@@ -11,6 +11,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 
+#include "qamg8833.h"
+
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
@@ -25,8 +27,11 @@ Widget::Widget(QWidget *parent)
     setIR();
     timer_ = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(timerUpdate()));
-    timer_->start(66); //msec. min is 125 - 8fps - maximum for AGM8833
-    //PC - 66 - 15fps minimum for ThinkPad
+    timer_->start(100); //msec. min is 100 - 10fps - maximum for AGM8833
+    //PC - 66 - 15fps minimum for ThinkPad. or 33msec/30fps
+    ir_ = new QAmg8833(this);
+    data.fill(0,64);;
+    //ir_->set10fps();
 }
 
 Widget::~Widget()
@@ -142,7 +147,7 @@ Widget::setCamCV()
     cvCap.open(0); // cv::CAP_V4L);
     cvCap.set(cv::CAP_PROP_FRAME_WIDTH, 320);
     cvCap.set(cv::CAP_PROP_FRAME_HEIGHT, 240);
-    cvCap.set(cv::CAP_PROP_FPS, 15);
+    //cvCap.set(cv::CAP_PROP_FPS, 30);
 
     if (!cvCap.isOpened()){
         qErrnoWarning("CV camera capture error");
@@ -241,6 +246,20 @@ void
 Widget::cvIRUpdate()
 {
     qDebug() << __PRETTY_FUNCTION__;
+
+    ir_->getData(data);
+    cv::Mat imgIn(8, 8, CV_8UC1, data.data()), imgTmp;
+
+    QImage imageOut(imgIn.cols, imgIn.rows,  QImage::Format_RGB888);
+    cv::Mat imageCvOut(cv::Size(imgIn.cols,imgIn.rows),
+                       CV_8UC3, imageOut.bits());
+
+    cv::rotate(imgIn, imgTmp, cv::ROTATE_180);
+    cv::cvtColor(imgTmp, imageCvOut, cv::COLOR_GRAY2RGB);
+
+    lbIR_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
+    qDebug() << data;
+
 }
 
 void
