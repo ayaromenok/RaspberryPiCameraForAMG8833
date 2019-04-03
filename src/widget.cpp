@@ -30,7 +30,8 @@ Widget::Widget(QWidget *parent)
     timer_->start(100); //msec. min is 100 - 10fps - maximum for AGM8833
     //PC - 66 - 15fps minimum for ThinkPad. or 33msec/30fps
     ir_ = new QAmg8833(this);
-    ir_->set10fps();
+    data.fill(0,64);;
+    //ir_->set10fps();
 }
 
 Widget::~Widget()
@@ -245,6 +246,8 @@ void
 Widget::cvIRUpdate()
 {
     qDebug() << __PRETTY_FUNCTION__;
+    ir_->getData(data);
+    qDebug() << data;
 }
 
 void
