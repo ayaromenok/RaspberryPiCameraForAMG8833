@@ -12,6 +12,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 
+class QAmg8833;
+
 class QLayout;
 class QHBoxLayout;
 class QVBoxLayout;
@@ -78,6 +80,7 @@ private:
 
     cv::VideoCapture        cvCap;
     cv::Mat                 frame;
+    QAmg8833                *ir_;
 };
 
 #endif // WIDGET_H

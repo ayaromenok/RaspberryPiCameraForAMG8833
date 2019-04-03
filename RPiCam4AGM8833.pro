@@ -16,10 +16,12 @@ CONFIG += c++11
 
 SOURCES += \
         src/main.cpp \
-        src/widget.cpp
+        src/widget.cpp \
+    src/qamg8833.cpp
 
 HEADERS += \
-        src/widget.h
+        src/widget.h \
+    src/qamg8833.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -36,4 +38,5 @@ linux:!android {
     LIBS += -L$${CVLINUX}/lib
     LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
     LIBS += -lopencv_highgui -lopencv_videoio
+    LIBS += -lwiringPi -lcrypt
 }
