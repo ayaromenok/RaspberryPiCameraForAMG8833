@@ -46,8 +46,7 @@ equals(QMAKE_HOST.os, Linux) {
     equals(QMAKE_HOST.arch, x86_64){
         message("        arch: amd64")
     }
-    equals(QMAKE_HOST.arch, armv6l){
-        message("        arch: Pi/arm")
-        #armv6l or aarch64
+    contains(QMAKE_HOST.arch, armv7l){
+        message("        arch: RPi/armv7l")
     }
 }
