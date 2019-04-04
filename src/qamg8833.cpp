@@ -7,9 +7,11 @@
 
 QAmg8833::QAmg8833(QObject *parent) : QObject(parent)
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__<< "Debug";
+    fd_ = 0;
+#else //DEBUG_PC
     fd_ = wiringPiI2CSetup(0x69);
-
     if (0 == fd_) {
         qDebug() << "Can't init AMG8833. Please check wiring and/or "
                     "switch on I2C in raspi-config";
@@ -23,6 +25,7 @@ QAmg8833::QAmg8833(QObject *parent) : QObject(parent)
     qDebug() << "writing 0x02 reg" << rslt_;
     rslt_ = wiringPiI2CWriteReg8(fd_, AMG8833_INT, AMG8833_DISABLE_INT);
     qDebug() << "writing 0x03 reg" << rslt_;
+#endif //DEBUG_PC
 
     timer_ = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateData()));
@@ -53,8 +56,12 @@ QAmg8833::updateData()
     for (int i=0; i<AMG8833_RES_X; i++) {
         for (int j=0; j<AMG8833_RES_Y; j++) {
             adr = AMG8833_DATA_OFFSET+(i*AMG8833_RES_X +j)*2; //2byte data
+#ifdef DEBUG_PC
+            raw = 127;
+#else //DEBUG_PC
             rslt_ = wiringPiI2CWriteReg8(fd_, adr, 0);
             raw = wiringPiI2CReadReg16(fd_, adr);
+#endif //DEBUG_PC
             data[i*AMG8833_RES_X +j] = (quint8) raw;
          }
     }

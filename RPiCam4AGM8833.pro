@@ -36,7 +36,7 @@ RESOURCES += \
 CVLINUX = /usr/local
 #Darwin, Windows, Android, iOS
 equals(QMAKE_HOST.os, Linux) {
-    message("* OpenCV settings for Unix/Linux.")
+    message("        Settings for Unix/Linux.")
     INCLUDEPATH += $${CVLINUX}/include/opencv4
     LIBS += -L$${CVLINUX}/lib
     LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
@@ -44,9 +44,19 @@ equals(QMAKE_HOST.os, Linux) {
     LIBS += -lwiringPi -lcrypt
 
     equals(QMAKE_HOST.arch, x86_64){
+        DEFINES += DEBUG_PC
         message("        arch: amd64")
     }
     contains(QMAKE_HOST.arch, armv7l){
         message("        arch: RPi/armv7l")
+        DEFINES += DEBUG_RPI_V7L
+    }
+    contains(QMAKE_HOST.arch, armv6l){
+        message("        arch: RPi/armv6l")
+        DEFINES += DEBUG_RPI_V6L
+    }
+    contains(QMAKE_HOST.arch, aarch64){
+        message("        arch: RPi3/aarch64")
+        DEFINES += DEBUG_RPI_ARM64
     }
 }
