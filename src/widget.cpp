@@ -25,6 +25,7 @@ Widget::Widget(QWidget *parent)
     setCam();
 #endif //CAMERA_CAPTURE_CV
     setIR();
+
     timer_ = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(timerUpdate()));
     timer_->start(100); //msec. min is 100 - 10fps - maximum for AGM8833
@@ -221,7 +222,7 @@ void
 Widget::cvCamUpdate(cv::Mat &imgIn)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    cv::Mat imgTmp, imgRes;
+    cv::Mat imgTmp, imgEdge, imgRes;
 
     cv::cvtColor(imgIn, imgTmp, cv::COLOR_RGB2GRAY);
 #ifdef DEBUG_PC
@@ -230,9 +231,19 @@ Widget::cvCamUpdate(cv::Mat &imgIn)
     //\todo add to settings - required flip for rpi cam v1.3/wide angle
     cv::flip(imgTmp, imgTmp, -1); //flip by both axis
 #endif //DEBUG_PC
-    cv::Canny(imgTmp, imgRes, 50, 100, 3);
+    cv::Canny(imgTmp, imgEdge, 50, 100, 3);
 
-    imgRes += imgTmp;
+    //cut Region Of Interect and show it on original image
+    cv::Rect roi;
+    roi.x = 96;
+    roi.y = 56;
+    roi.width = 128;
+    roi.height = 128;
+    frame = imgEdge(roi); //use in IR image
+    cv::rectangle(imgTmp, roi, cv::Scalar(255,255,255), 2);
+
+    // due to typically different FPS in IR and Cam use separate image for dipslay
+    imgRes = imgTmp + imgEdge;
 
     QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
     cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
@@ -249,20 +260,25 @@ void
 Widget::cvIRUpdate()
 {
     qDebug() << __PRETTY_FUNCTION__;
-
+    cv::Mat img128;
     ir_->getData(data);
     cv::Mat imgIn(8, 8, CV_8UC1, data.data()), imgTmp;
 
-    QImage imageOut(imgIn.cols, imgIn.rows,  QImage::Format_RGB888);
-    cv::Mat imageCvOut(cv::Size(imgIn.cols,imgIn.rows),
+    cv::flip(imgIn, imgTmp, 1); //\todo - also add rotate\flip settings to config
+
+    //scale to 128 for now
+    cv::resize(imgTmp,img128, cv::Size(128,128));
+
+    img128 += frame;// add detected edges from main camera
+
+    QImage imageOut(img128.cols, img128.rows,  QImage::Format_RGB888);
+    cv::Mat imageCvOut(cv::Size(img128.cols,img128.rows),
                        CV_8UC3, imageOut.bits());
 
-    cv::flip(imgIn, imgTmp, 1);
-    cv::cvtColor(imgTmp, imageCvOut, cv::COLOR_GRAY2RGB);
+    cv::cvtColor(img128, imageCvOut, cv::COLOR_GRAY2RGB);
 
     lbIR_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
-    qDebug() << data;
-
+ //   qDebug() << data;
 }
 
 void

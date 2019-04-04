@@ -57,7 +57,11 @@ QAmg8833::updateData()
         for (int j=0; j<AMG8833_RES_Y; j++) {
             adr = AMG8833_DATA_OFFSET+(i*AMG8833_RES_X +j)*2; //2byte data
 #ifdef DEBUG_PC
-            raw = 127;
+            raw = 63;
+            if ((i>3) & (i <5))
+                raw += 63;
+            if ((j>3) & (j <5))
+                raw += 63;
 #else //DEBUG_PC
             rslt_ = wiringPiI2CWriteReg8(fd_, adr, 0);
             raw = wiringPiI2CReadReg16(fd_, adr);
