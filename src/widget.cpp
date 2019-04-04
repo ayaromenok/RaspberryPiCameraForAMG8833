@@ -13,11 +13,13 @@
 
 #include "qamg8833.h"
 
+#include <algorithm>
+
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
 #ifdef DEBUG_PC
-    qDebug() << __PRETTY_FUNCTION__ << type;;
+    qDebug() << __PRETTY_FUNCTION__ << "Debug";
 #endif //DEBUG_PC
 
     setGeometry (100, 100, 854, 480);
@@ -41,7 +43,7 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget()
 {
 #ifdef DEBUG_PC
-    qDebug() << __PRETTY_FUNCTION__ << type;;
+    qDebug() << __PRETTY_FUNCTION__;
 #endif //DEBUG_PC
     timer_->stop();
 }
@@ -50,7 +52,7 @@ void
 Widget::setUI(quint32 type)
 {
 #ifdef DEBUG_PC
-    qDebug() << __PRETTY_FUNCTION__ << type;;
+    qDebug() << __PRETTY_FUNCTION__ << type;
 #endif //DEBUG_PC
 
     if (type == 0){
@@ -291,6 +293,16 @@ Widget::cvIRUpdate()
     qDebug() << __PRETTY_FUNCTION__;
     cv::Mat img128;
     ir_->getData(data);
+
+    quint8 dataMin = *std::min_element(data.begin(), data.end());
+    quint8 dataMax = *std::max_element(data.begin(), data.end());
+    quint8 dataScaleAuto = (quint8)255/(dataMax-dataMin);
+
+    qDebug() << "data: " << dataMin << dataMax << dataScaleAuto;
+    for (int i=0; i<data.length(); i++) {
+        data[i] = (data.at(i)-dataMin) * dataScaleAuto;
+    }
+
     cv::Mat imgIn(8, 8, CV_8UC1, data.data()), imgTmp;
 
     cv::flip(imgIn, imgTmp, 1); //\todo - also add rotate\flip settings to config
