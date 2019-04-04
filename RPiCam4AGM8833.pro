@@ -31,12 +31,23 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     res.qrc
 
+
+
 CVLINUX = /usr/local
-linux:!android {
+#Darwin, Windows, Android, iOS
+equals(QMAKE_HOST.os, Linux) {
     message("* OpenCV settings for Unix/Linux.")
     INCLUDEPATH += $${CVLINUX}/include/opencv4
     LIBS += -L$${CVLINUX}/lib
     LIBS += -lopencv_core -lopencv_imgcodecs -lopencv_imgproc
     LIBS += -lopencv_highgui -lopencv_videoio
     LIBS += -lwiringPi -lcrypt
+
+    equals(QMAKE_HOST.arch, x86_64){
+        message("        arch: amd64")
+    }
+    equals(QMAKE_HOST.arch, armv6l){
+        message("        arch: Pi/arm")
+        #armv6l or aarch64
+    }
 }
