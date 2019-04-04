@@ -16,7 +16,10 @@
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
+
     setGeometry (100, 100, 854, 480);
     setUI(0);
 #ifdef CAMERA_CAPTURE_CV
@@ -37,14 +40,19 @@ Widget::Widget(QWidget *parent)
 
 Widget::~Widget()
 {
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
     timer_->stop();
-    qDebug() << __PRETTY_FUNCTION__;
 }
 
 void
 Widget::setUI(quint32 type)
 {
-    qDebug() << __PRETTY_FUNCTION__ << type;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
+
     if (type == 0){
         loutMain_ = new QHBoxLayout;
     } else {
@@ -84,7 +92,9 @@ Widget::setUI(quint32 type)
 void
 Widget::timerUpdate()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
 
 #ifdef CAMERA_CAPTURE_CV
     //OpenCV capture here
@@ -110,7 +120,9 @@ Widget::timerUpdate()
 void
 Widget::setCam()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC;
     camViewFinder_  = new QCameraViewfinder;
     loutCtrl_->addWidget(camViewFinder_);
 
@@ -144,7 +156,9 @@ Widget::setCam()
 void
 Widget::setCamCV()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
     cvCap.open(0); // cv::CAP_V4L);
     cvCap.set(cv::CAP_PROP_FRAME_WIDTH, 320);
     cvCap.set(cv::CAP_PROP_FRAME_HEIGHT, 240);
@@ -161,13 +175,18 @@ Widget::setCamCV()
 void
 Widget::setIR()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
 }
 
 bool
 Widget::imgToBuffer(int id, const QVideoFrame &buffer)
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
+
     bool result = false;
     QVideoFrame frame(buffer);
 
@@ -185,7 +204,10 @@ Widget::imgToBuffer(int id, const QVideoFrame &buffer)
 bool
 Widget::imgToFile(int id, const QString &fName)
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
+
     bool result = false;
     QImage imgIn(fName);
     QImage img(imgIn.scaled(320,240));
@@ -202,7 +224,9 @@ Widget::imgToFile(int id, const QString &fName)
 
 void
 Widget::camUpdate(QImage &image){
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
 
     cv::Mat imgIn(cv::Size(image.width(),image.height()),
                   CV_8UC4, image.bits());
@@ -221,7 +245,9 @@ Widget::camUpdate(QImage &image){
 void
 Widget::cvCamUpdate(cv::Mat &imgIn)
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
     cv::Mat imgTmp, imgEdge, imgRes;
 
     cv::cvtColor(imgIn, imgTmp, cv::COLOR_RGB2GRAY);
@@ -259,6 +285,9 @@ Widget::cvCamUpdate(cv::Mat &imgIn)
 void
 Widget::cvIRUpdate()
 {
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
     cv::Mat img128;
     ir_->getData(data);
@@ -284,6 +313,8 @@ Widget::cvIRUpdate()
 void
 Widget::quit()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
     QApplication::quit();
 }

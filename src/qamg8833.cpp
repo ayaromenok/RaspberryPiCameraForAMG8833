@@ -34,13 +34,18 @@ QAmg8833::QAmg8833(QObject *parent) : QObject(parent)
 
 QAmg8833::~QAmg8833()
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
 }
 
 float
 QAmg8833::s12tofp32(int value)
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
+
     int absValue = (value & 0x7FF);
     if (value & 0x8000){
         return (0 - float(absValue));
@@ -51,7 +56,10 @@ QAmg8833::s12tofp32(int value)
 void
 QAmg8833::updateData()
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
+
     int raw, adr;
     for (int i=0; i<AMG8833_RES_X; i++) {
         for (int j=0; j<AMG8833_RES_Y; j++) {
@@ -74,7 +82,10 @@ QAmg8833::updateData()
 void
 QAmg8833::set10fps()
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
+
     rslt_ = wiringPiI2CWriteReg8(fd_, AMG8833_FPS, AMG8833_FPS_10);
     timer_->start(100);  //msec
 
@@ -83,7 +94,10 @@ QAmg8833::set10fps()
 void
 QAmg8833::set1fps()
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
+
     rslt_ = wiringPiI2CWriteReg8(fd_, AMG8833_FPS, AMG8833_FPS_1);
     timer_->start(1000); //msec
 }
@@ -91,7 +105,10 @@ QAmg8833::set1fps()
 void
 QAmg8833::getData(QVector<quint8> &dataExt)
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << type;;
+#endif //DEBUG_PC
+
     updateData();
     if (dataExt.length() == AMG8833_DATA_SIZE){
         quint8 *dataPtr = dataExt.data();
