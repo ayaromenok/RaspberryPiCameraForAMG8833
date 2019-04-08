@@ -24,11 +24,7 @@ Widget::Widget(QWidget *parent)
 
     setGeometry (100, 100, 854, 480);
     setUI(0);
-#ifdef CAMERA_CAPTURE_CV
     setCamCV();
-#else //CAMERA_CAPTURE_CV
-    setCam();
-#endif //CAMERA_CAPTURE_CV
     setIR();
 
     timer_ = new QTimer(this);
@@ -37,7 +33,6 @@ Widget::Widget(QWidget *parent)
     //PC - 66 - 15fps minimum for ThinkPad. or 33msec/30fps
     ir_ = new QAmg8833(this);
     data.fill(0,64);;
-    //ir_->set10fps();
 }
 
 Widget::~Widget()
@@ -98,7 +93,6 @@ Widget::timerUpdate()
     qDebug() << __PRETTY_FUNCTION__;
 #endif //DEBUG_PC
 
-#ifdef CAMERA_CAPTURE_CV
     //OpenCV capture here
     cvCap >> frame;
     if (0 == frame.cols){
@@ -106,54 +100,10 @@ Widget::timerUpdate()
     } else {
         cvCamUpdate(frame);
     }
-#else //CAMERA_CAPTURE_CV
-    cam_->searchAndLock();
-    #ifdef CAMERA_CAPTURE_VIA_FILE
-        imgCap_->capture("./imgCam.jpg");
-    #else //CAMERA_CAPTURE_VIA_FILE
-        imgCap_->capture();
-    #endif //CAMERA_CAPTURE_VIA_FILE
-    cam_->unlock();
-#endif //CAMERA_CAPTURE_CV
-
     cvIRUpdate();
 }
 
-void
-Widget::setCam()
-{
-#ifdef DEBUG_PC
-    qDebug() << __PRETTY_FUNCTION__;
-#endif //DEBUG_PC;
-    camViewFinder_  = new QCameraViewfinder;
-    loutCtrl_->addWidget(camViewFinder_);
 
-    const QList<QCameraInfo> availableCameras = QCameraInfo::availableCameras();
-    for (const QCameraInfo &cameraInfo : availableCameras) {
-        qDebug() << "camera: " << cameraInfo.description();
-    }
-    cam_ = new QCamera(QCameraInfo::defaultCamera());
-    cam_->setCaptureMode(QCamera::CaptureStillImage);
-    cam_->setViewfinder(camViewFinder_);
-
-    imgCap_ = new QCameraImageCapture(cam_);
-
-#ifdef CAMERA_CAPTURE_VIA_FILE
-    //workaround for RPi\OSX\iOS\some Windows builds
-    imgCap_->setCaptureDestination(QCameraImageCapture::CaptureToFile);
-    connect(imgCap_, SIGNAL(imageSaved(int, const QString&)),
-        this, SLOT(imgToFile(int, const QString&)));
-    qDebug() << "Capture via File (workaround mode)";
-#else //CAMERA_CAPTURE_VIA_FILE
-    imgCap_->setCaptureDestination(QCameraImageCapture::CaptureToBuffer);
-    connect(imgCap_, &QCameraImageCapture::imageAvailable,
-            this, &Widget::imgToBuffer);
-    qDebug() << "Capture via Buffer (preferable mode)";
-#endif //CAMERA_CAPTURE_VIA_FILE
-    camViewFinder_->show();
-
-    cam_->start();
-}
 
 void
 Widget::setCamCV()
@@ -180,68 +130,6 @@ Widget::setIR()
 #ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
 #endif //DEBUG_PC
-}
-
-bool
-Widget::imgToBuffer(int id, const QVideoFrame &buffer)
-{
-#ifdef DEBUG_PC
-    qDebug() << __PRETTY_FUNCTION__;
-#endif //DEBUG_PC
-
-    bool result = false;
-    QVideoFrame frame(buffer);
-
-    frame.map(QAbstractVideoBuffer::ReadOnly);
-    int nbytes = frame.mappedBytes();
-    QImage imgIn = QImage::fromData(frame.bits(), nbytes).scaledToWidth(360);
-//    qDebug() << "\t\tinput image format" << imgIn.format()
-//             << "// 4 - Image::Format_RGB32" << "id" <<id;
-    lbCam_->setPixmap(QPixmap::fromImage(imgIn));
-    if (imgIn.width() > 0)
-        result = true;
-    return result;
-}
-
-bool
-Widget::imgToFile(int id, const QString &fName)
-{
-#ifdef DEBUG_PC
-    qDebug() << __PRETTY_FUNCTION__;
-#endif //DEBUG_PC
-
-    bool result = false;
-    QImage imgIn(fName);
-    QImage img(imgIn.scaled(320,240));
-    qDebug() << "\t\tinput image format" << img.format()
-             << "// 4 - Image::Format_RGB32" << "id" << id
-             << "size" << img.width() << img.height();
-    if (!imgIn.isNull())
-        camUpdate(img);
-
-    if (imgIn.width() > 0)
-        result = true;
-    return result;
-}
-
-void
-Widget::camUpdate(QImage &image){
-#ifdef DEBUG_PC
-    qDebug() << __PRETTY_FUNCTION__;
-#endif //DEBUG_PC
-
-    cv::Mat imgIn(cv::Size(image.width(),image.height()),
-                  CV_8UC4, image.bits());
-    cv:: Mat gray,grayRes, imgRes;
-
-    cv::Canny(imgIn, imgRes, 50, 100, 3);
-    //cv::imshow("res", imgRes);
-    QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
-    cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
-                       CV_8UC3, imageOut.bits());
-    cv::cvtColor(imgRes, imageCvOut, cv::COLOR_BGR2RGB);
-
-    lbCam_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
 }
 
 void
