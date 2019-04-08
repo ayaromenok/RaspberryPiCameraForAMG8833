@@ -7,9 +7,6 @@ QT       += multimedia multimediawidgets
 
 TARGET = RPiCam4AGM8833
 
-DEFINES += CAMERA_CAPTURE_VIA_FILE
-DEFINES += CAMERA_CAPTURE_CV
-
 TEMPLATE = app
 
 CONFIG += c++11
