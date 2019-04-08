@@ -264,15 +264,17 @@ Widget::cvCamUpdate(cv::Mat &imgIn)
 
     //cut Region Of Interect and show it on original image
     cv::Rect roi;
-    roi.x = 96;
-    roi.y = 56;
-    roi.width = 128;
-    roi.height = 128;
-    frame = imgEdge(roi); //use in IR image
+    roi.x = 40;//96;
+    roi.y = 0;//56;
+    roi.width = 240;//128;
+    roi.height = 240;//128;
+
+    cv::resize(imgEdge(roi), frame, cv::Size(128,128));
+
     cv::rectangle(imgTmp, roi, cv::Scalar(255,255,255), 2);
 
     // due to typically different FPS in IR and Cam use separate image for dipslay
-    imgRes = imgIn + imgEdge;
+    imgRes = imgTmp + imgEdge;
 
     QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
     cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
@@ -309,7 +311,7 @@ Widget::cvIRUpdate()
     cv::flip(imgIn, imgTmp, 1); //\todo - also add rotate\flip settings to config
 
     //scale to 128 for now
-    cv::resize(imgTmp,img128, cv::Size(128,128));
+    cv::resize(imgTmp, img128, cv::Size(128,128));
 
     img128 += frame;// add detected edges from main camera
 
