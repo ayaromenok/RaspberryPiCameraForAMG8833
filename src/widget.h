@@ -76,6 +76,10 @@ private:
     cv::Mat                 frame;
     QAmg8833                *ir_;
     QVector<quint8>         data;
+
+    quint8                  dataMin;
+    quint8                  dataMax;
+    quint8                  dataScaleAuto;
 };
 
 #endif // WIDGET_H

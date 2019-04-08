@@ -22,6 +22,10 @@ Widget::Widget(QWidget *parent)
     qDebug() << __PRETTY_FUNCTION__ << "Debug";
 #endif //DEBUG_PC
 
+    dataMin = 255;
+    dataMax = 0;
+    dataScaleAuto = 1;
+
     setGeometry (100, 100, 854, 480);
     setUI(0);
     setCamCV();
@@ -185,9 +189,14 @@ Widget::cvIRUpdate()
     cv::Mat img128;
     ir_->getData(data);
 
-    quint8 dataMin = *std::min_element(data.begin(), data.end());
-    quint8 dataMax = *std::max_element(data.begin(), data.end());
-    quint8 dataScaleAuto = (quint8)255/(dataMax-dataMin);
+    if (dataMin > *std::min_element(data.begin(), data.end())) {
+        dataMin = *std::min_element(data.begin(), data.end());
+        dataScaleAuto = (quint8)255/(dataMax-dataMin);
+    }
+    if (dataMax < *std::max_element(data.begin(), data.end())){
+        dataMax = *std::max_element(data.begin(), data.end());
+        dataScaleAuto = (quint8)255/(dataMax-dataMin);
+    }
 
     qDebug() << "data: " << dataMin << dataMax << dataScaleAuto;
     for (int i=0; i<data.length(); i++) {
