@@ -269,7 +269,7 @@ Widget::cvCamUpdate(cv::Mat &imgIn)
     roi.width = 240;//128;
     roi.height = 240;//128;
 
-    cv::resize(imgEdge(roi), frame, cv::Size(128,128));
+    cv::resize(imgEdge(roi), frame, cv::Size(240,240));
 
     cv::rectangle(imgTmp, roi, cv::Scalar(255,255,255), 2);
 
@@ -308,10 +308,10 @@ Widget::cvIRUpdate()
 
     cv::Mat imgIn(8, 8, CV_8UC1, data.data()), imgTmp;
 
-    cv::flip(imgIn, imgTmp, 1); //\todo - also add rotate\flip settings to config
+    //cv::flip(imgIn, imgTmp, 1); //\todo - also add rotate\flip settings to config
 
     //scale to 128 for now
-    cv::resize(imgTmp, img128, cv::Size(128,128));
+    cv::resize(imgIn, img128, cv::Size(240,240));
 
     img128 += frame;// add detected edges from main camera
 
