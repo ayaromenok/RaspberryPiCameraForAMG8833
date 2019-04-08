@@ -46,16 +46,12 @@ public:
 
 private slots:
     void        timerUpdate();
-    bool        imgToBuffer(int id, const QVideoFrame &buffer);
-    // workaround for https://github.com/ayaromenok/RaspberryPiCameraForAMG8833/issues/4
-    bool        imgToFile(int id, const QString &fName);
-    void        camUpdate(QImage &image);
+
     void        cvCamUpdate(cv::Mat &imgIn);
     void        cvIRUpdate();
     void        quit();
 
 private:
-    void setCam();
     void setCamCV();
     void setIR();
     QLayout     *loutMain_;
@@ -75,14 +71,15 @@ private:
     QVBoxLayout *loutCtrl_;
 
     QTimer      *timer_;
-    QCamera                 *cam_;
-    QCameraImageCapture     *imgCap_;
-    QCameraViewfinder       *camViewFinder_;
 
     cv::VideoCapture        cvCap;
     cv::Mat                 frame;
     QAmg8833                *ir_;
     QVector<quint8>         data;
+
+    quint8                  dataMin;
+    quint8                  dataMax;
+    quint8                  dataScaleAuto;
 };
 
 #endif // WIDGET_H

@@ -13,37 +13,47 @@
 
 #include "qamg8833.h"
 
+#include <algorithm>
+
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << "Debug";
+#endif //DEBUG_PC
+
+    dataMin = 255;
+    dataMax = 0;
+    dataScaleAuto = 1;
+
     setGeometry (100, 100, 854, 480);
     setUI(0);
-#ifdef CAMERA_CAPTURE_CV
     setCamCV();
-#else //CAMERA_CAPTURE_CV
-    setCam();
-#endif //CAMERA_CAPTURE_CV
     setIR();
+
     timer_ = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(timerUpdate()));
     timer_->start(100); //msec. min is 100 - 10fps - maximum for AGM8833
     //PC - 66 - 15fps minimum for ThinkPad. or 33msec/30fps
     ir_ = new QAmg8833(this);
     data.fill(0,64);;
-    //ir_->set10fps();
 }
 
 Widget::~Widget()
 {
-    timer_->stop();
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
+    timer_->stop();
 }
 
 void
 Widget::setUI(quint32 type)
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__ << type;
+#endif //DEBUG_PC
+
     if (type == 0){
         loutMain_ = new QHBoxLayout;
     } else {
@@ -83,9 +93,10 @@ Widget::setUI(quint32 type)
 void
 Widget::timerUpdate()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
 
-#ifdef CAMERA_CAPTURE_CV
     //OpenCV capture here
     cvCap >> frame;
     if (0 == frame.cols){
@@ -93,57 +104,17 @@ Widget::timerUpdate()
     } else {
         cvCamUpdate(frame);
     }
-#else //CAMERA_CAPTURE_CV
-    cam_->searchAndLock();
-    #ifdef CAMERA_CAPTURE_VIA_FILE
-        imgCap_->capture("./imgCam.jpg");
-    #else //CAMERA_CAPTURE_VIA_FILE
-        imgCap_->capture();
-    #endif //CAMERA_CAPTURE_VIA_FILE
-    cam_->unlock();
-#endif //CAMERA_CAPTURE_CV
-
     cvIRUpdate();
 }
 
-void
-Widget::setCam()
-{
-    qDebug() << __PRETTY_FUNCTION__;
-    camViewFinder_  = new QCameraViewfinder;
-    loutCtrl_->addWidget(camViewFinder_);
 
-    const QList<QCameraInfo> availableCameras = QCameraInfo::availableCameras();
-    for (const QCameraInfo &cameraInfo : availableCameras) {
-        qDebug() << "camera: " << cameraInfo.description();
-    }
-    cam_ = new QCamera(QCameraInfo::defaultCamera());
-    cam_->setCaptureMode(QCamera::CaptureStillImage);
-    cam_->setViewfinder(camViewFinder_);
-
-    imgCap_ = new QCameraImageCapture(cam_);
-
-#ifdef CAMERA_CAPTURE_VIA_FILE
-    //workaround for RPi\OSX\iOS\some Windows builds
-    imgCap_->setCaptureDestination(QCameraImageCapture::CaptureToFile);
-    connect(imgCap_, SIGNAL(imageSaved(int, const QString&)),
-        this, SLOT(imgToFile(int, const QString&)));
-    qDebug() << "Capture via File (workaround mode)";
-#else //CAMERA_CAPTURE_VIA_FILE
-    imgCap_->setCaptureDestination(QCameraImageCapture::CaptureToBuffer);
-    connect(imgCap_, &QCameraImageCapture::imageAvailable,
-            this, &Widget::imgToBuffer);
-    qDebug() << "Capture via Buffer (preferable mode)";
-#endif //CAMERA_CAPTURE_VIA_FILE
-    camViewFinder_->show();
-
-    cam_->start();
-}
 
 void
 Widget::setCamCV()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
     cvCap.open(0); // cv::CAP_V4L);
     cvCap.set(cv::CAP_PROP_FRAME_WIDTH, 320);
     cvCap.set(cv::CAP_PROP_FRAME_HEIGHT, 240);
@@ -160,76 +131,42 @@ Widget::setCamCV()
 void
 Widget::setIR()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
-}
-
-bool
-Widget::imgToBuffer(int id, const QVideoFrame &buffer)
-{
-    qDebug() << __PRETTY_FUNCTION__;
-    bool result = false;
-    QVideoFrame frame(buffer);
-
-    frame.map(QAbstractVideoBuffer::ReadOnly);
-    int nbytes = frame.mappedBytes();
-    QImage imgIn = QImage::fromData(frame.bits(), nbytes).scaledToWidth(360);
-//    qDebug() << "\t\tinput image format" << imgIn.format()
-//             << "// 4 - Image::Format_RGB32" << "id" <<id;
-    lbCam_->setPixmap(QPixmap::fromImage(imgIn));
-    if (imgIn.width() > 0)
-        result = true;
-    return result;
-}
-
-bool
-Widget::imgToFile(int id, const QString &fName)
-{
-    qDebug() << __PRETTY_FUNCTION__;
-    bool result = false;
-    QImage imgIn(fName);
-    QImage img(imgIn.scaled(320,240));
-    qDebug() << "\t\tinput image format" << img.format()
-             << "// 4 - Image::Format_RGB32" << "id" << id
-             << "size" << img.width() << img.height();
-    if (!imgIn.isNull())
-        camUpdate(img);
-
-    if (imgIn.width() > 0)
-        result = true;
-    return result;
-}
-
-void
-Widget::camUpdate(QImage &image){
-    qDebug() << __PRETTY_FUNCTION__;
-
-    cv::Mat imgIn(cv::Size(image.width(),image.height()),
-                  CV_8UC4, image.bits());
-    cv:: Mat gray,grayRes, imgRes;
-
-    cv::Canny(imgIn, imgRes, 50, 100, 3);
-    //cv::imshow("res", imgRes);
-    QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
-    cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
-                       CV_8UC3, imageOut.bits());
-    cv::cvtColor(imgRes, imageCvOut, cv::COLOR_BGR2RGB);
-
-    lbCam_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
+#endif //DEBUG_PC
 }
 
 void
 Widget::cvCamUpdate(cv::Mat &imgIn)
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
-    cv::Mat imgTmp, imgTmp0, imgRes;
+#endif //DEBUG_PC
+    cv::Mat imgTmp, imgEdge, imgRes;
 
+    cv::cvtColor(imgIn, imgTmp, cv::COLOR_RGB2GRAY);
+#ifdef DEBUG_PC
+
+#else //DEBUG_PC
     //\todo add to settings - required flip for rpi cam v1.3/wide angle
-    cv::cvtColor(imgIn, imgTmp0, cv::COLOR_RGB2GRAY);
-    cv::flip(imgTmp0, imgTmp, -1); //flip by both axis
+    //don't flip for std RPi cam v1.3
+    //cv::flip(imgTmp, imgTmp, -1); //flip by both axis
+#endif //DEBUG_PC
+    cv::Canny(imgTmp, imgEdge, 50, 100, 3);
 
-    cv::Canny(imgTmp, imgRes, 50, 100, 3);
+    //cut Region Of Interect and show it on original image
+    cv::Rect roi;
+    roi.x = 40;//96;
+    roi.y = 0;//56;
+    roi.width = 240;//128;
+    roi.height = 240;//128;
 
-    imgRes += imgTmp;
+    cv::resize(imgEdge(roi), frame, cv::Size(240,240));
+
+    cv::rectangle(imgTmp, roi, cv::Scalar(255,255,255), 2);
+
+    // due to typically different FPS in IR and Cam use separate image for dipslay
+    imgRes = imgTmp + imgEdge;
 
     QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
     cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
@@ -245,26 +182,51 @@ Widget::cvCamUpdate(cv::Mat &imgIn)
 void
 Widget::cvIRUpdate()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
-
+#endif //DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__;
+    cv::Mat img128;
     ir_->getData(data);
+
+    if (dataMin > *std::min_element(data.begin(), data.end())) {
+        dataMin = *std::min_element(data.begin(), data.end());
+        dataScaleAuto = (quint8)255/(dataMax-dataMin);
+    }
+    if (dataMax < *std::max_element(data.begin(), data.end())){
+        dataMax = *std::max_element(data.begin(), data.end());
+        dataScaleAuto = (quint8)255/(dataMax-dataMin);
+    }
+
+    qDebug() << "data: " << dataMin << dataMax << dataScaleAuto;
+    for (int i=0; i<data.length(); i++) {
+        data[i] = (data.at(i)-dataMin) * dataScaleAuto;
+    }
+
     cv::Mat imgIn(8, 8, CV_8UC1, data.data()), imgTmp;
 
-    QImage imageOut(imgIn.cols, imgIn.rows,  QImage::Format_RGB888);
-    cv::Mat imageCvOut(cv::Size(imgIn.cols,imgIn.rows),
+    cv::flip(imgIn, imgTmp, -1); //\todo - also add rotate\flip settings to config
+
+    //scale to 128 for now
+    cv::resize(imgTmp, img128, cv::Size(240,240));
+
+    img128 += frame;// add detected edges from main camera
+
+    QImage imageOut(img128.cols, img128.rows,  QImage::Format_RGB888);
+    cv::Mat imageCvOut(cv::Size(img128.cols,img128.rows),
                        CV_8UC3, imageOut.bits());
 
-    cv::rotate(imgIn, imgTmp, cv::ROTATE_180);
-    cv::cvtColor(imgTmp, imageCvOut, cv::COLOR_GRAY2RGB);
+    cv::cvtColor(img128, imageCvOut, cv::COLOR_GRAY2RGB);
 
     lbIR_->setPixmap(QPixmap::fromImage(imageOut.scaledToWidth(320)));
-    qDebug() << data;
-
+ //   qDebug() << data;
 }
 
 void
 Widget::quit()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
     QApplication::quit();
 }

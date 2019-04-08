@@ -7,9 +7,11 @@
 
 QAmg8833::QAmg8833(QObject *parent) : QObject(parent)
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__<< "Debug";
+    fd_ = 0;
+#else //DEBUG_PC
     fd_ = wiringPiI2CSetup(0x69);
-
     if (0 == fd_) {
         qDebug() << "Can't init AMG8833. Please check wiring and/or "
                     "switch on I2C in raspi-config";
@@ -23,6 +25,7 @@ QAmg8833::QAmg8833(QObject *parent) : QObject(parent)
     qDebug() << "writing 0x02 reg" << rslt_;
     rslt_ = wiringPiI2CWriteReg8(fd_, AMG8833_INT, AMG8833_DISABLE_INT);
     qDebug() << "writing 0x03 reg" << rslt_;
+#endif //DEBUG_PC
 
     timer_ = new QTimer(this);
     connect(timer_, SIGNAL(timeout()), this, SLOT(updateData()));
@@ -31,13 +34,18 @@ QAmg8833::QAmg8833(QObject *parent) : QObject(parent)
 
 QAmg8833::~QAmg8833()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
 }
 
 float
 QAmg8833::s12tofp32(int value)
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ << value;
+#endif //DEBUG_PC
+
     int absValue = (value & 0x7FF);
     if (value & 0x8000){
         return (0 - float(absValue));
@@ -48,13 +56,24 @@ QAmg8833::s12tofp32(int value)
 void
 QAmg8833::updateData()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
+
     int raw, adr;
     for (int i=0; i<AMG8833_RES_X; i++) {
         for (int j=0; j<AMG8833_RES_Y; j++) {
             adr = AMG8833_DATA_OFFSET+(i*AMG8833_RES_X +j)*2; //2byte data
+#ifdef DEBUG_PC
+            raw = 63;
+            if ((i>3) & (i <5))
+                raw += 63;
+            if ((j>3) & (j <5))
+                raw += 63;
+#else //DEBUG_PC
             rslt_ = wiringPiI2CWriteReg8(fd_, adr, 0);
             raw = wiringPiI2CReadReg16(fd_, adr);
+#endif //DEBUG_PC
             data[i*AMG8833_RES_X +j] = (quint8) raw;
          }
     }
@@ -63,7 +82,10 @@ QAmg8833::updateData()
 void
 QAmg8833::set10fps()
 {
-    qDebug() << __PRETTY_FUNCTION__;
+#ifdef DEBUG_PC
+    qDebug() << __PRETTY_FUNCTION__ ;
+#endif //DEBUG_PC
+
     rslt_ = wiringPiI2CWriteReg8(fd_, AMG8833_FPS, AMG8833_FPS_10);
     timer_->start(100);  //msec
 
@@ -72,7 +94,10 @@ QAmg8833::set10fps()
 void
 QAmg8833::set1fps()
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
+
     rslt_ = wiringPiI2CWriteReg8(fd_, AMG8833_FPS, AMG8833_FPS_1);
     timer_->start(1000); //msec
 }
@@ -80,7 +105,10 @@ QAmg8833::set1fps()
 void
 QAmg8833::getData(QVector<quint8> &dataExt)
 {
+#ifdef DEBUG_PC
     qDebug() << __PRETTY_FUNCTION__;
+#endif //DEBUG_PC
+
     updateData();
     if (dataExt.length() == AMG8833_DATA_SIZE){
         quint8 *dataPtr = dataExt.data();
