@@ -257,7 +257,8 @@ Widget::cvCamUpdate(cv::Mat &imgIn)
 
 #else //DEBUG_PC
     //\todo add to settings - required flip for rpi cam v1.3/wide angle
-    cv::flip(imgTmp, imgTmp, -1); //flip by both axis
+    //don't flip for std RPi cam v1.3
+    //cv::flip(imgTmp, imgTmp, -1); //flip by both axis
 #endif //DEBUG_PC
     cv::Canny(imgTmp, imgEdge, 50, 100, 3);
 
@@ -271,7 +272,7 @@ Widget::cvCamUpdate(cv::Mat &imgIn)
     cv::rectangle(imgTmp, roi, cv::Scalar(255,255,255), 2);
 
     // due to typically different FPS in IR and Cam use separate image for dipslay
-    imgRes = imgTmp + imgEdge;
+    imgRes = imgIn + imgEdge;
 
     QImage imageOut(imgRes.cols, imgRes.rows,  QImage::Format_RGB888);
     cv::Mat imageCvOut(cv::Size(imgRes.cols,imgRes.rows),
