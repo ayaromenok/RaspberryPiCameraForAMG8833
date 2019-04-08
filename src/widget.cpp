@@ -308,10 +308,10 @@ Widget::cvIRUpdate()
 
     cv::Mat imgIn(8, 8, CV_8UC1, data.data()), imgTmp;
 
-    //cv::flip(imgIn, imgTmp, 1); //\todo - also add rotate\flip settings to config
+    cv::flip(imgIn, imgTmp, -1); //\todo - also add rotate\flip settings to config
 
     //scale to 128 for now
-    cv::resize(imgIn, img128, cv::Size(240,240));
+    cv::resize(imgTmp, img128, cv::Size(240,240));
 
     img128 += frame;// add detected edges from main camera
 
