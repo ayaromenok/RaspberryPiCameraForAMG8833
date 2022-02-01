@@ -1,3 +1,5 @@
+https://github.com/ayaromenok/AMG8833Cam connect AMG8833 to PC
+
 # RaspberryPiCameraForAMG8833
 RPiCamForAMG8833
 
